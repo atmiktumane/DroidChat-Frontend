@@ -2,7 +2,7 @@ import { Button, PasswordInput, TextInput } from "@mantine/core";
 import logo from "../assets/droidChat_Logo.png";
 import { MdLockOutline, MdOutlineAlternateEmail } from "react-icons/md";
 
-export const LoginPage = () => {
+export const SignupPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-white">
       {/* Diagonal split background with glow */}
@@ -61,12 +61,23 @@ export const LoginPage = () => {
 
             {/* Sub heading */}
             <h4 className="text-sm mt-1 mb-6 font-medium text-zinc-500 text-center">
-              <span className="font-semibold">Login</span> to start chatting
+              <span className="font-semibold">Sign Up</span> to start chatting
               with your AI assistant
             </h4>
 
-            {/* Login Form */}
+            {/* Signup Form */}
             <div className="space-y-4">
+              {/* Name Input */}
+              <TextInput
+                withAsterisk
+                name="name"
+                label="Name"
+                placeholder="Your name"
+                //   value={data.name}
+                //   onChange={onChangeHandleData}
+                //   error={formError.name}
+              />
+
               {/* Email Input */}
               <TextInput
                 size="sm"
@@ -93,7 +104,7 @@ export const LoginPage = () => {
                 // error={formError.password}
               />
 
-              {/* Login Button */}
+              {/* Signup Button */}
               <Button
                 // onClick={submitLoginForm}
                 autoContrast
@@ -104,26 +115,19 @@ export const LoginPage = () => {
                   label: { color: "white" },
                 }}
               >
-                Login
+                Sign Up
               </Button>
 
-              {/* Signup  */}
+              {/* Login  */}
               <p className="text-center text-xs font-medium text-zinc-500">
-                Don't have an account ?{" "}
+                Already have an account ?{" "}
                 <a
-                  href="/signup"
+                  href="/"
                   className="text-sm font-semibold text-cyan-500 hover:underline"
                 >
-                  Sign up
+                  Login
                 </a>
               </p>
-
-              {/* Forgot Password */}
-              <div className="flex justify-center w-full">
-                <button className="!text-sm !font-semibold text-cyan-500 hover:underline cursor-pointer">
-                  Forgot Password ?
-                </button>
-              </div>
             </div>
           </div>
         </div>
