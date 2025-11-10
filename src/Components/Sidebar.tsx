@@ -3,6 +3,7 @@ import logo from "../assets/droidChat_Logo.png";
 import { FiPlus } from "react-icons/fi";
 import { BiSearch } from "react-icons/bi";
 import { FaRegUserCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 export const Sidebar = () => {
   const chatList = [
@@ -16,6 +17,8 @@ export const Sidebar = () => {
     { id: 1, name: "Chat with Alice", timeStamp: "10:30 AM" },
     { id: 1, name: "Chat with Alice", timeStamp: "10:30 AM" },
   ];
+
+  const navigate = useNavigate();
   return (
     <div className="w-1/5 h-screen p-3 flex flex-col justify-between gap-10 border-r border-gray-300">
       <div className="space-y-10">
@@ -87,7 +90,12 @@ export const Sidebar = () => {
         </div>
 
         {/* Logout btn */}
-        <Button variant="outline" color="red" size="xs">
+        <Button
+          onClick={() => navigate("/")}
+          variant="outline"
+          color="red"
+          size="xs"
+        >
           Logout
         </Button>
       </div>

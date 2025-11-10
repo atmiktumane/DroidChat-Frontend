@@ -3,10 +3,18 @@ import logo from "../assets/droidChat_Logo.png";
 import { MdLockOutline, MdOutlineAlternateEmail } from "react-icons/md";
 import { useDisclosure } from "@mantine/hooks";
 import { ForgotPassword } from "../Components/ForgotPassword";
+import { useNavigate } from "react-router-dom";
 
 export const LoginPage = () => {
   // Mantine ResetPassword Modal (Open/Close)
   const [opened, { open, close }] = useDisclosure(false);
+
+  const navigate = useNavigate();
+
+  const submitLoginForm = () => {
+    // Handle Login Form Submission
+    navigate("/chat");
+  };
 
   return (
     <>
@@ -101,7 +109,7 @@ export const LoginPage = () => {
 
                 {/* Login Button */}
                 <Button
-                  // onClick={submitLoginForm}
+                  onClick={submitLoginForm}
                   autoContrast
                   variant="filled"
                   color="cyan.3"
