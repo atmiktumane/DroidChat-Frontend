@@ -20,4 +20,21 @@ const signupAPI = async (user_data: any) => {
   }
 };
 
-export { signupAPI };
+// POST : Login API
+const loginAPI = async (login_data: any) => {
+  try {
+    const response = await axios.post(
+      `${apiUrl}/api/v1/user/login`,
+      login_data
+    );
+
+    return response.data;
+  } catch (error: any) {
+    // Error Notification
+    errorNotification("Error", "Failed to Login");
+
+    throw new Error("An unexpected error occurred : ", error);
+  }
+};
+
+export { signupAPI, loginAPI };

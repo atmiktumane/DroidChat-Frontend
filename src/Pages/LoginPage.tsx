@@ -1,19 +1,98 @@
-import { Button, PasswordInput, TextInput } from "@mantine/core";
+import {
+  Button,
+  LoadingOverlay,
+  PasswordInput,
+  TextInput,
+} from "@mantine/core";
 import logo from "../assets/droidChat_Logo.png";
 import { MdLockOutline, MdOutlineAlternateEmail } from "react-icons/md";
 import { useDisclosure } from "@mantine/hooks";
 import { ForgotPassword } from "../Components/ForgotPassword";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { loginFormValidation } from "../Utils/FormValidation";
+import { successNotification } from "../Utils/NotificationService";
+import { loginAPI } from "../Services/UserService";
+import { setLocalStorageItem } from "../Utils/LocalStorage";
 
 export const LoginPage = () => {
+  // Initial values of Login form inputs
+  const form = {
+    email: "",
+    password: "",
+  };
+
+  // State to manage : data in input fields
+  const [loginData, setLoginData] = useState<{ [key: string]: string }>(form);
+
+  // State to manage : validation errors in input fields
+  const [formError, setFormError] = useState<{ [key: string]: string }>(form);
+
+  // State : To manage loader
+  const [loader, setLoader] = useState<boolean>(false);
+
   // Mantine ResetPassword Modal (Open/Close)
   const [opened, { open, close }] = useDisclosure(false);
 
   const navigate = useNavigate();
 
-  const submitLoginForm = () => {
-    // Handle Login Form Submission
-    navigate("/chat");
+  // Handle Data function -> save data onChange of input fields
+  const onChangeHandleData = (e: any) => {
+    // Input fields
+    const { name, value } = e.target;
+
+    setLoginData({ ...loginData, [name]: value });
+
+    // Validation Error checks
+    setFormError({ ...formError, [name]: loginFormValidation(name, value) });
+  };
+
+  // Login Form Submit
+  const submitLoginForm = async (e: any) => {
+    e.preventDefault();
+
+    // Check input validation onSubmit
+    let valid = true;
+    let newFormError: { [key: string]: string } = {};
+
+    for (let key in loginData) {
+      // console.log(key, " -- ", loginData[key]);
+      newFormError[key] = loginFormValidation(key, loginData[key]);
+
+      // if any input field is having validation error, then set valid = false
+      if (newFormError[key]) valid = false;
+    }
+
+    // Set validation input error
+    setFormError(newFormError);
+
+    // Validation failed, Don't proceed further
+    if (valid === false) return;
+
+    // Show Loader while API Calling
+    setLoader(true);
+
+    try {
+      const response = await loginAPI(loginData);
+
+      // console.log("Login success data : ", response);
+
+      // Save data in Local Storage
+      setLocalStorageItem("user", response);
+
+      // Hide Loader
+      setLoader(false);
+
+      // Show Success Notification
+      successNotification("Success", "Login Successfull");
+
+      // Navigate to Chat Page
+
+      navigate("/chat");
+    } catch (error: any) {
+      // Hide Loader
+      setLoader(false);
+    }
   };
 
   return (
@@ -89,9 +168,9 @@ export const LoginPage = () => {
                   label="Email"
                   placeholder="Enter email"
                   name="email"
-                  // value={loginData.email}
-                  // onChange={onChangeHandleData}
-                  // error={formError.email}
+                  value={loginData.email}
+                  onChange={onChangeHandleData}
+                  error={formError.email}
                 />
 
                 {/* Password Input */}
@@ -102,9 +181,9 @@ export const LoginPage = () => {
                   label="Password"
                   placeholder="Password"
                   name="password"
-                  // value={loginData.password}
-                  // onChange={onChangeHandleData}
-                  // error={formError.password}
+                  value={loginData.password}
+                  onChange={onChangeHandleData}
+                  error={formError.password}
                 />
 
                 {/* Login Button */}
@@ -124,12 +203,12 @@ export const LoginPage = () => {
                 {/* Signup  */}
                 <p className="text-center text-xs font-medium text-zinc-500">
                   Don't have an account ?{" "}
-                  <a
-                    href="/signup"
+                  <Link
+                    to="/signup"
                     className="text-sm font-semibold text-cyan-500 hover:underline"
                   >
                     Sign up
-                  </a>
+                  </Link>
                 </p>
 
                 {/* Forgot Password */}
@@ -162,6 +241,14 @@ export const LoginPage = () => {
 
       {/* Open ResetPassword Modal */}
       <ForgotPassword opened={opened} close={close} />
+
+      {/* Loader */}
+      <LoadingOverlay
+        visible={loader}
+        zIndex={1000}
+        overlayProps={{ radius: "sm", blur: 2 }}
+        loaderProps={{ color: "cyan.4", type: "bars" }}
+      />
     </>
   );
 };
