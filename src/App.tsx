@@ -1,13 +1,17 @@
 import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
+
 import { MantineProvider } from "@mantine/core";
 import { Route, Routes } from "react-router-dom";
 import { LoginPage } from "./Pages/LoginPage";
 import { SignupPage } from "./Pages/SignupPage";
 import { ChatBoxPage } from "./Pages/ChatBoxPage";
+import { Notifications } from "@mantine/notifications";
 
 const App = () => {
   return (
     <MantineProvider>
+      <Notifications position="top-center" zIndex={10000} />
       <div>
         <Routes>
           <Route path="/signup" element={<SignupPage />} />
