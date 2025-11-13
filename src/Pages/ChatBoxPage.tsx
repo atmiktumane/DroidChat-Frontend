@@ -1,11 +1,38 @@
 import { Button, Textarea } from "@mantine/core";
 import { Sidebar } from "../Components/Sidebar";
 import logo from "../assets/droidChat_Logo.png";
+import { useEffect } from "react";
+import { userSummaryAPI } from "../Services/ChatService";
+import { getLocalStorageItem } from "../Utils/LocalStorage";
+import { useDispatch, useSelector } from "react-redux";
+import { setUserSummary } from "../ReduxStore/Slices/UserSummarySlice";
 
 export const ChatBoxPage = () => {
+  const user = getLocalStorageItem("user");
+
+  const userSummary = useSelector((state: any) => state.userSummary.data);
+
+  const dispatch = useDispatch();
+
+  // GET - User Summary API definition
+  const fetchUserSummary = async () => {
+    try {
+      const response = await userSummaryAPI(user.id);
+
+      dispatch(setUserSummary(response));
+    } catch (error) {
+      console.error("Failed to fetch user summary:", error);
+    }
+  };
+
+  // PageLoad workflow
+  useEffect(() => {
+    fetchUserSummary();
+  }, []);
+
   return (
     <div className="flex w-full">
-      <Sidebar />
+      <Sidebar userSummary={userSummary} />
       <div className="w-5/6 h-screen flex flex-col items-center justify-center">
         {/* Row 1 - Logo + App Name */}
         <div className="flex flex-col items-center">
