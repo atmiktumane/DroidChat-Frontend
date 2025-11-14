@@ -17,9 +17,12 @@ const userSummarySlice = createSlice({
     setUserSummary: (state, action: PayloadAction<any>) => {
       state.data = action.payload;
     },
+    clearUserSummary: (state) => {
+      state.data = null;
+    },
   },
 });
 
-export const { setUserSummary } = userSummarySlice.actions;
+export const { setUserSummary, clearUserSummary } = userSummarySlice.actions;
 
 export default userSummarySlice.reducer;

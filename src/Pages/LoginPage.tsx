@@ -1,9 +1,4 @@
-import {
-  Button,
-  LoadingOverlay,
-  PasswordInput,
-  TextInput,
-} from "@mantine/core";
+import { Button, PasswordInput, TextInput } from "@mantine/core";
 import logo from "../assets/droidChat_Logo.png";
 import { MdLockOutline, MdOutlineAlternateEmail } from "react-icons/md";
 import { useDisclosure } from "@mantine/hooks";
@@ -14,6 +9,9 @@ import { loginFormValidation } from "../Utils/FormValidation";
 import { successNotification } from "../Utils/NotificationService";
 import { loginAPI } from "../Services/UserService";
 import { setLocalStorageItem } from "../Utils/LocalStorage";
+import { useDispatch, useSelector } from "react-redux";
+import { Loader } from "../Components/Loader";
+import { setLoading } from "../ReduxStore/Slices/loadingSlice";
 
 export const LoginPage = () => {
   // Initial values of Login form inputs
@@ -29,7 +27,9 @@ export const LoginPage = () => {
   const [formError, setFormError] = useState<{ [key: string]: string }>(form);
 
   // State : To manage loader
-  const [loader, setLoader] = useState<boolean>(false);
+  const isLoading = useSelector((state: any) => state.loading.isLoading);
+
+  const dispatch = useDispatch();
 
   // Mantine ResetPassword Modal (Open/Close)
   const [opened, { open, close }] = useDisclosure(false);
@@ -70,7 +70,7 @@ export const LoginPage = () => {
     if (valid === false) return;
 
     // Show Loader while API Calling
-    setLoader(true);
+    dispatch(setLoading(true));
 
     try {
       const response = await loginAPI(loginData);
@@ -81,7 +81,7 @@ export const LoginPage = () => {
       setLocalStorageItem("user", response);
 
       // Hide Loader
-      setLoader(false);
+      dispatch(setLoading(false));
 
       // Show Success Notification
       successNotification("Success", "Login Successfull");
@@ -91,7 +91,7 @@ export const LoginPage = () => {
       navigate("/chat");
     } catch (error: any) {
       // Hide Loader
-      setLoader(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -243,12 +243,7 @@ export const LoginPage = () => {
       <ForgotPassword opened={opened} close={close} />
 
       {/* Loader */}
-      <LoadingOverlay
-        visible={loader}
-        zIndex={1000}
-        overlayProps={{ radius: "sm", blur: 2 }}
-        loaderProps={{ color: "cyan.4", type: "bars" }}
-      />
+      <Loader isLoading={isLoading} />
     </>
   );
 };

@@ -1,29 +1,75 @@
 import { Button, Textarea } from "@mantine/core";
 import { Sidebar } from "../Components/Sidebar";
 import logo from "../assets/droidChat_Logo.png";
-import { useEffect } from "react";
-import { userSummaryAPI } from "../Services/ChatService";
+import { useEffect, useState } from "react";
+import { sendChatAPI, userSummaryAPI } from "../Services/ChatService";
 import { getLocalStorageItem } from "../Utils/LocalStorage";
+import { setUserSummary } from "../ReduxStore/Slices/userSummarySlice";
 import { useDispatch, useSelector } from "react-redux";
-import { setUserSummary } from "../ReduxStore/Slices/UserSummarySlice";
+import { setLoading } from "../ReduxStore/Slices/loadingSlice";
+import { useNavigate } from "react-router-dom";
 
 export const ChatBoxPage = () => {
+  const [prompt, setPrompt] = useState("");
+
   const user = getLocalStorageItem("user");
+
+  const dispatch = useDispatch();
 
   const userSummary = useSelector((state: any) => state.userSummary.data);
 
-  const dispatch = useDispatch();
+  const [navigateToLatestChat, setNavigateToLatestChat] = useState(false);
+
+  console.log("User Summary in ChatBoxPage :", userSummary);
+
+  const navigate = useNavigate();
 
   // GET - User Summary API definition
   const fetchUserSummary = async () => {
     try {
       const response = await userSummaryAPI(user.id);
-
       dispatch(setUserSummary(response));
     } catch (error) {
       console.error("Failed to fetch user summary:", error);
     }
   };
+
+  // POST - Send Chat API definition
+  const sendChatFunction = async () => {
+    dispatch(setLoading(true));
+    try {
+      const chatData = {
+        chat_id_input: "",
+        user_id_input: user.id,
+        chat_name_input: prompt.slice(0, 40),
+        prompt_input: prompt,
+      };
+
+      // Send Chat API call
+      await sendChatAPI(chatData);
+
+      // Fetch updated user summary
+      await fetchUserSummary();
+
+      setNavigateToLatestChat(true);
+
+      setPrompt("");
+    } catch (error) {
+      console.error("Failed to send chat:", error);
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  // On userSummary update, navigate to latest chat
+  useEffect(() => {
+    if (navigateToLatestChat && userSummary.length > 0) {
+      const lastElement = userSummary[userSummary.length - 1];
+      navigate(`/chat/${lastElement.chatId}`);
+
+      setNavigateToLatestChat(true);
+    }
+  }, [userSummary, navigateToLatestChat]);
 
   // PageLoad workflow
   useEffect(() => {
@@ -32,8 +78,9 @@ export const ChatBoxPage = () => {
 
   return (
     <div className="flex w-full">
-      <Sidebar userSummary={userSummary} />
-      <div className="w-5/6 h-screen flex flex-col items-center justify-center">
+      <Sidebar />
+
+      <div className="w-4/5 h-screen flex flex-col items-center justify-center">
         {/* Row 1 - Logo + App Name */}
         <div className="flex flex-col items-center">
           <div className="flex items-center gap-3">
@@ -72,8 +119,10 @@ export const ChatBoxPage = () => {
                 backgroundColor: "#f0f9ff",
               },
             }}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
           />
-          <Button radius="lg" color="cyan.3">
+          <Button onClick={sendChatFunction} radius="lg" color="cyan.3">
             Send
           </Button>
         </div>

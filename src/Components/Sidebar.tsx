@@ -1,16 +1,9 @@
-import {
-  Box,
-  Button,
-  LoadingOverlay,
-  Modal,
-  Text,
-  TextInput,
-} from "@mantine/core";
+import { Box, Button, Modal, Text, TextInput } from "@mantine/core";
 import logo from "../assets/droidChat_Logo.png";
 import { FiPlus } from "react-icons/fi";
 import { BiSearch } from "react-icons/bi";
 import { FaRegUserCircle } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   clearAllLocalStorageItems,
   getLocalStorageItem,
@@ -18,41 +11,58 @@ import {
 import { useState } from "react";
 import { HiOutlineTrash } from "react-icons/hi";
 import { deleteChatAPI, userSummaryAPI } from "../Services/ChatService";
-import { useDispatch } from "react-redux";
-import { setUserSummary } from "../ReduxStore/Slices/UserSummarySlice";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  clearUserSummary,
+  setUserSummary,
+} from "../ReduxStore/Slices/userSummarySlice";
+import { Loader } from "./Loader";
+import { setLoading } from "../ReduxStore/Slices/loadingSlice";
 
-export const Sidebar = ({ userSummary }: any) => {
+export const Sidebar = () => {
   const [filterVar, setFilterVar] = useState("");
 
   const navigate = useNavigate();
+
+  const userSummary = useSelector((state: any) => state.userSummary.data);
+
+  // Sort user summary by timestamp (latest first)
+  const sortedUserSummary = [...userSummary].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
 
   const user = getLocalStorageItem("user");
 
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [deleteChatId, setDeleteChatId] = useState("");
 
-  const [loader, setLoader] = useState<boolean>(false);
+  const isLoading = useSelector((state: any) => state.loading.isLoading);
 
   const dispatch = useDispatch();
 
+  // Params location : to Highlight the Current Chat in Sidebar
+  const location = useLocation();
+  const chatId = location.pathname.split("/").pop();
+
   const deleteChatFunction = async () => {
     try {
-      setLoader(true);
+      dispatch(setLoading(true));
 
       // Delete chat
       await deleteChatAPI(deleteChatId);
 
       // Fetch updated user summary
       const response = await userSummaryAPI(user.id);
-
       dispatch(setUserSummary(response));
+
+      navigate("/chat");
 
       alert("Successfully deleted the chat.");
     } catch (error) {
       console.error("Error deleting chat:", error);
     } finally {
       // reset UI state, even if API fails
-      setLoader(false);
+      dispatch(setLoading(false));
       setDeleteModalOpened(false);
       setDeleteChatId("");
     }
@@ -89,6 +99,7 @@ export const Sidebar = ({ userSummary }: any) => {
               color="cyan.3"
               leftSection={<FiPlus />}
               fullWidth
+              onClick={() => navigate("/chat")}
             >
               New Chat
             </Button>
@@ -107,77 +118,76 @@ export const Sidebar = ({ userSummary }: any) => {
               {userSummary?.length === 0 && (
                 <p className="text-xs text-gray-500">No chats present.</p>
               )}
-              {userSummary
+              {sortedUserSummary
                 ?.filter((chat: any) =>
                   chat.chatName?.toLowerCase().includes(filterVar.toLowerCase())
                 )
                 ?.map((chat: any) => (
-                  <>
-                    <div
-                      key={chat.chatId}
-                      className="relative px-3 py-2 border border-zinc-300 rounded-md cursor-pointer 
-             bg-white hover:bg-gray-200 transition-colors duration-150 ease-in-out"
-                    >
-                      {/* Chat name */}
-                      <div className="flex justify-between items-center">
-                        <Box
-                          w={{ base: 50, sm: 100, md: 150, lg: 200, xl: 250 }}
-                        >
-                          <Text size="sm" truncate="end" fw={500}>
-                            {chat.chatName}
-                          </Text>
-                        </Box>
+                  <Link
+                    to={`/chat/${chat.chatId}`}
+                    key={chat.chatId}
+                    className={`block relative px-3 py-2 border border-zinc-300 rounded-md cursor-pointer 
+             bg-white hover:bg-gray-200 transition-colors duration-150 ease-in-out ${
+               chatId == chat.chatId ? "!border-cyan-300" : ""
+             }`}
+                  >
+                    {/* Chat name */}
+                    <div className="flex justify-between items-center">
+                      <Box w={{ base: 50, sm: 100, md: 150, lg: 200, xl: 250 }}>
+                        <Text size="sm" truncate="end" fw={500}>
+                          {chat.chatName}
+                        </Text>
+                      </Box>
 
-                        {/* 3-dot (trash) icon */}
-                        <div className="w-[20px] h-[20px] flex justify-center items-center">
-                          <HiOutlineTrash
-                            size={18}
-                            className="text-gray-600 hover:text-black transition-colors duration-150"
-                            onClick={() => {
-                              setDeleteModalOpened(true);
-                              setDeleteChatId(chat.chatId);
-                            }}
-                          />
-                        </div>
-
-                        <Modal
-                          opened={deleteModalOpened}
-                          onClose={() => {
-                            setDeleteModalOpened(false);
-                            setDeleteChatId("");
+                      {/* 3-dot (trash) icon */}
+                      <div className="w-[20px] h-[20px] flex justify-center items-center">
+                        <HiOutlineTrash
+                          size={18}
+                          className="text-gray-600 hover:text-red-700 transition-colors duration-150"
+                          onClick={() => {
+                            setDeleteModalOpened(true);
+                            setDeleteChatId(chat.chatId);
                           }}
-                          title="Delete Chat"
-                        >
-                          {/* Modal content */}
-                          <div className="flex flex-col gap-6 items-center">
-                            <p className="text-red-500">
-                              Are You Sure, you want to delete this chat ?
-                            </p>
-                            <div className="flex gap-4">
-                              <Button
-                                variant="outline"
-                                color="gray"
-                                onClick={() => {
-                                  setDeleteModalOpened(false);
-                                  setDeleteChatId("");
-                                }}
-                              >
-                                Cancel
-                              </Button>
-
-                              <Button
-                                variant="filled"
-                                color="red.8"
-                                onClick={deleteChatFunction}
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                          </div>
-                        </Modal>
+                        />
                       </div>
+
+                      <Modal
+                        opened={deleteModalOpened}
+                        onClose={() => {
+                          setDeleteModalOpened(false);
+                          setDeleteChatId("");
+                        }}
+                        title="Delete Chat"
+                      >
+                        {/* Modal content */}
+                        <div className="flex flex-col gap-6 items-center">
+                          <p className="text-red-500">
+                            Are You Sure, you want to delete this chat ?
+                          </p>
+                          <div className="flex gap-4">
+                            <Button
+                              variant="outline"
+                              color="gray"
+                              onClick={() => {
+                                setDeleteModalOpened(false);
+                                setDeleteChatId("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+
+                            <Button
+                              variant="filled"
+                              color="red.8"
+                              onClick={deleteChatFunction}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </Modal>
                     </div>
-                  </>
+                  </Link>
                 ))}
             </div>
           </div>
@@ -197,6 +207,7 @@ export const Sidebar = ({ userSummary }: any) => {
           <Button
             onClick={() => {
               clearAllLocalStorageItems();
+              dispatch(clearUserSummary());
               navigate("/");
             }}
             variant="outline"
@@ -209,12 +220,7 @@ export const Sidebar = ({ userSummary }: any) => {
       </div>
 
       {/* Loader */}
-      <LoadingOverlay
-        visible={loader}
-        zIndex={1000}
-        overlayProps={{ radius: "sm", blur: 2 }}
-        loaderProps={{ color: "cyan.4", type: "bars" }}
-      />
+      <Loader isLoading={isLoading} />
     </>
   );
 };

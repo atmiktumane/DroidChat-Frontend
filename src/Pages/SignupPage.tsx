@@ -1,9 +1,4 @@
-import {
-  Button,
-  LoadingOverlay,
-  PasswordInput,
-  TextInput,
-} from "@mantine/core";
+import { Button, PasswordInput, TextInput } from "@mantine/core";
 import logo from "../assets/droidChat_Logo.png";
 import { MdLockOutline, MdOutlineAlternateEmail } from "react-icons/md";
 import { useState } from "react";
@@ -11,6 +6,9 @@ import { signupFormValidation } from "../Utils/FormValidation";
 import { Link, useNavigate } from "react-router-dom";
 import { signupAPI } from "../Services/UserService";
 import { successNotification } from "../Utils/NotificationService";
+import { useDispatch, useSelector } from "react-redux";
+import { Loader } from "../Components/Loader";
+import { setLoading } from "../ReduxStore/Slices/loadingSlice";
 
 export const SignupPage = () => {
   // Initial values of Signup form inputs
@@ -26,8 +24,10 @@ export const SignupPage = () => {
   // State to manage : validation errors in input fields
   const [formError, setFormError] = useState<{ [key: string]: string }>(form);
 
-  // State : To manage loader
-  const [loader, setLoader] = useState<boolean>(false);
+  // Redux State : To manage loader
+  const isLoading = useSelector((state: any) => state.loading.isLoading);
+
+  const dispatch = useDispatch();
 
   // Navigation
   const navigate = useNavigate();
@@ -79,7 +79,7 @@ export const SignupPage = () => {
     console.log("User Data : ", data);
 
     // Show Loader
-    setLoader(true);
+    dispatch(setLoading(true));
 
     try {
       await signupAPI(data);
@@ -87,7 +87,7 @@ export const SignupPage = () => {
       // console.log("Register success data : ", response);
 
       // Hide Loader
-      setLoader(false);
+      dispatch(setLoading(false));
 
       // Show Success Notification
       successNotification(
@@ -99,7 +99,7 @@ export const SignupPage = () => {
       navigate("/login");
     } catch (error: any) {
       // Hide Loader
-      setLoader(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -249,12 +249,7 @@ export const SignupPage = () => {
       </div>
 
       {/* Loader */}
-      <LoadingOverlay
-        visible={loader}
-        zIndex={1000}
-        overlayProps={{ radius: "sm", blur: 2 }}
-        loaderProps={{ color: "cyan.4", type: "bars" }}
-      />
+      <Loader isLoading={isLoading} />
     </>
   );
 };
