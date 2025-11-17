@@ -61,7 +61,7 @@ export const ChatBoxPage = () => {
     }
   };
 
-  // On userSummary update, navigate to latest chat
+  // On userSummary update, navigate to latest  chat
   useEffect(() => {
     if (navigateToLatestChat && userSummary.length > 0) {
       const lastElement = userSummary[userSummary.length - 1];
